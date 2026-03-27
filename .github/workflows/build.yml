@@ -1,0 +1,112 @@
+  name: Build & Release                                                         
+   
+  on:                                                                           
+    push:                                                   
+      tags:
+        - 'v*'
+    workflow_dispatch:                                                          
+   
+  jobs:                                                                         
+    build-windows:                                          
+      name: Build Windows
+      runs-on: windows-latest
+      steps:
+        - uses: actions/checkout@v4                                             
+   
+        - name: Setup Flutter                                                   
+          uses: subosito/flutter-action@v2                  
+          with:
+            flutter-version: '3.24.0'
+            channel: 'stable'                                                   
+                                                                                
+        - name: Build Windows x64                                               
+          run: flutter build windows --release --target-platform=x64            
+                                                                                
+        - name: Build Windows arm64                                             
+          run: flutter build windows --release --target-platform=arm64          
+                                                                                
+        - name: Upload artifacts                                                
+          uses: actions/upload-artifact@v4                                      
+          with:                                                                 
+            name: windows-x64                                                   
+            path: build/windows/x64/runner/Release/*.exe                        
+        - uses: actions/upload-artifact@v4                                      
+          with:                                                                 
+            name: windows-arm64                                                 
+            path: build/windows/arm64/runner/Release/*.exe                      
+                                                                                
+    build-macos:                                                                
+      name: Build macOS                                                         
+      runs-on: macos-latest                                                     
+      steps:                                                                    
+        - uses: actions/checkout@v4                                             
+                                                                                
+        - name: Setup Flutter                                                   
+          uses: subosito/flutter-action@v2                                      
+          with:                                                                 
+            flutter-version: '3.24.0'                                           
+            channel: 'stable'                                                   
+                                                                                
+        - name: Build macOS x64 (Intel)                                         
+          run: flutter build macos --release --platforms=x64                    
+                                                                                
+        - name: Build macOS arm64 (Apple Silicon)                               
+          run: flutter build macos --release --platforms=arm64                  
+                                                                                
+        - name: Upload artifacts                                                
+          uses: actions/upload-artifact@v4                                      
+          with:                                                                 
+            name: macos-x64                                                     
+            path: build/macos/Build/Products/Release/lan_transfer.app           
+        - uses: actions/upload-artifact@v4                                      
+          with:                                                                 
+            name: macos-arm64                                                   
+            path: build/macos/Build/Products/Release/lan_transfer.app           
+                                                                                
+    build-ios:                                                                  
+      name: Build iOS                                                           
+      runs-on: macos-latest                                                     
+      steps:                                                                    
+        - uses: actions/checkout@v4                                             
+                                                                                
+        - name: Setup Flutter                               
+          uses: subosito/flutter-action@v2                                      
+          with:                                             
+            flutter-version: '3.24.0'                                           
+            channel: 'stable'
+                                                                                
+        - name: Build iOS for simulator                                         
+          run: flutter build ios --simulator --no-codesign
+                                                                                
+        - name: Upload artifacts                                                
+          uses: actions/upload-artifact@v4                                      
+          with:                                                                 
+            name: ios-simulator                                                 
+            path: build/ios/iphonesimulator/Runner.app                          
+                                                                                
+    build-android:                                                              
+      name: Build Android                                                       
+      runs-on: ubuntu-latest                                                    
+      steps:                                                                    
+        - uses: actions/checkout@v4                                             
+                                                                                
+        - name: Setup Flutter                                                   
+          uses: subosito/flutter-action@v2                                      
+          with:                                                                 
+            flutter-version: '3.24.0'                                           
+            channel: 'stable'                                                   
+                                                                                
+        - name: Setup Java                                                      
+          uses: actions/setup-java@v4                                           
+          with:                                                                 
+            java-version: '17'                                                  
+            distribution: 'temurin'                                             
+                                                                                
+        - name: Build Android APK (universal)                                   
+          run: flutter build apk --release                                      
+                                                                                
+        - name: Upload artifacts                                                
+          uses: actions/upload-artifact@v4                                      
+          with:                                                                 
+            name: android-apk                                                   
+            path: build/app/outputs/flutter-apk/app-release.apk 
